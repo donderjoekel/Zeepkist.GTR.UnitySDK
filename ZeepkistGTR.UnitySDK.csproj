@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net472</TargetFramework>
+        <LangVersion>default</LangVersion>
+        <RootNamespace>TNRD.Zeepkist.GTR.SDK</RootNamespace>
+        <AssemblyName>TNRD.Zeepkist.GTR.SDK</AssemblyName>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <DefineConstants>TRACE;UNITASK_UGUI_SUPPORT;UNITY_2017_1;UNITY_2017_1_OR_NEWER;UNITY_2017_2;UNITY_2017_2_OR_NEWER;UNITY_2017_3;UNITY_2017_3_OR_NEWER;UNITY_2017_4;UNITY_2017_4_OR_NEWER;UNITY_2018_1;UNITY_2018_1_OR_NEWER;UNITY_2018_2;UNITY_2018_2_OR_NEWER;UNITY_2018_3;UNITY_2018_3_OR_NEWER;UNITY_2018_4;UNITY_2018_4_OR_NEWER;UNITY_2019_1;UNITY_2019_1_OR_NEWER;UNITY_2019_2;UNITY_2019_2_OR_NEWER;UNITY_2019_3;UNITY_2019_3_OR_NEWER;UNITY_2019_4;UNITY_2019_4_OR_NEWER;UNITY_2020_1;UNITY_2020_1_OR_NEWER;UNITY_2020_2;UNITY_2020_2_OR_NEWER;UNITY_2020_3;UNITY_2020_3_OR_NEWER;UNITY_2021_1;UNITY_2021_1_OR_NEWER;UNITY_2021_2;UNITY_2021_2_OR_NEWER;UNITY_2021_3;UNITY_2021_3_OR_NEWER</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DefineConstants>TRACE;UNITASK_UGUI_SUPPORT;UNITY_2017_1;UNITY_2017_1_OR_NEWER;UNITY_2017_2;UNITY_2017_2_OR_NEWER;UNITY_2017_3;UNITY_2017_3_OR_NEWER;UNITY_2017_4;UNITY_2017_4_OR_NEWER;UNITY_2018_1;UNITY_2018_1_OR_NEWER;UNITY_2018_2;UNITY_2018_2_OR_NEWER;UNITY_2018_3;UNITY_2018_3_OR_NEWER;UNITY_2018_4;UNITY_2018_4_OR_NEWER;UNITY_2019_1;UNITY_2019_1_OR_NEWER;UNITY_2019_2;UNITY_2019_2_OR_NEWER;UNITY_2019_3;UNITY_2019_3_OR_NEWER;UNITY_2019_4;UNITY_2019_4_OR_NEWER;UNITY_2020_1;UNITY_2020_1_OR_NEWER;UNITY_2020_2;UNITY_2020_2_OR_NEWER;UNITY_2020_3;UNITY_2020_3_OR_NEWER;UNITY_2021_1;UNITY_2021_1_OR_NEWER;UNITY_2021_2;UNITY_2021_2_OR_NEWER;UNITY_2021_3;UNITY_2021_3_OR_NEWER</DefineConstants>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+        <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+        <PackageReference Include="UnityEngine.Modules" Version="2021.3.10" IncludeAssets="compile" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Facepunch.Steamworks">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\Zeepkist_Data\Managed\Facepunch.Steamworks.dll</HintPath>
+        </Reference>
+        <Reference Include="l2Localization">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\Zeepkist_Data\Managed\l2Localization.dll</HintPath>
+        </Reference>
+        <Reference Include="Newtonsoft.Json">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\Zeepkist_Data\Managed\Newtonsoft.Json.dll</HintPath>
+        </Reference>
+        <Reference Include="System.Net.Http">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\Zeepkist_Data\Managed\System.Net.Http.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.TextMeshPro">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\Zeepkist_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UI">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\Zeepkist_Data\Managed\UnityEngine.UI.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Zeepkist.GTR.DTOs\Zeepkist.GTR.DTOs.csproj" />
+    </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\BepInEx\plugins\GTR&quot; /Y" />
+    </Target>
+
+</Project>
