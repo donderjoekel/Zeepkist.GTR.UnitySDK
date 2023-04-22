@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Net;
 using System.Text;
 using JetBrains.Annotations;
 using Steamworks;
@@ -219,10 +221,26 @@ public static class UsersApi
         };
 
         Result<RefreshResponseModel> result =
-            await AuthClient.Instance.Post<RefreshResponseModel>("game/refresh", refreshRequestModel, false);
+            await AuthClient.Instance.Post<RefreshResponseModel>("game/refresh", refreshRequestModel, false, false);
 
         if (result.IsFailed)
+        {
+            StatusCodeReason reason = (StatusCodeReason)result.Reasons.FirstOrDefault(x => x is StatusCodeReason);
+            if (reason == null)
+                return result.ToResult();
+
+            if (reason.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                AccessToken = string.Empty;
+                RefreshToken = string.Empty;
+                return await Login(modVersion);
+            }
+        }
+
+        if (result.IsFailed)
+        {
             return result.ToResult();
+        }
 
         UserId = result.Value.UserId;
         SteamId = result.Value.SteamId;
