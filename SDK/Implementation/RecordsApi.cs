@@ -9,18 +9,25 @@ using TNRD.Zeepkist.GTR.SDK.Client;
 namespace TNRD.Zeepkist.GTR.SDK;
 
 [PublicAPI]
-public static class RecordsApi
+public class RecordsApi : IRecordsApi
 {
-    public static UniTask<Result<RecordsGetResponseDTO>> Get(Action<RecordsGetRequestDTOBuilder> builder)
+    private readonly Sdk sdk;
+
+    public RecordsApi(Sdk sdk)
+    {
+        this.sdk = sdk;
+    }
+
+    public UniTask<Result<RecordsGetResponseDTO>> Get(Action<RecordsGetRequestDTOBuilder> builder)
     {
         RecordsGetRequestDTOBuilder actualBuilder = new();
         builder?.Invoke(actualBuilder);
         RecordsGetRequestDTO dto = actualBuilder.Build();
 
-        return ApiClient.Instance.Get<RecordsGetResponseDTO>($"records?{dto.ToQueryString()}");
+        return sdk.ApiClient.Get<RecordsGetResponseDTO>($"records?{dto.ToQueryString()}");
     }
 
-    public static UniTask<Result<RecordsGetRecentResponseDTO>> GetRecent(
+    public UniTask<Result<RecordsGetRecentResponseDTO>> GetRecent(
         Action<RecordsGetRecentRequestDTOBuilder> builder
     )
     {
@@ -28,6 +35,6 @@ public static class RecordsApi
         builder?.Invoke(actualBuilder);
         RecordsGetRecentRequestDTO dto = actualBuilder.Build();
 
-        return ApiClient.Instance.Get<RecordsGetRecentResponseDTO>($"records/recent?{dto.ToQueryString()}");
+        return sdk.ApiClient.Get<RecordsGetRecentResponseDTO>($"records/recent?{dto.ToQueryString()}");
     }
 }

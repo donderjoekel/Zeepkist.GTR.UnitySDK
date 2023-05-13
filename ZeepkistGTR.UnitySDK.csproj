@@ -50,8 +50,4 @@
       <ProjectReference Include="..\Zeepkist.GTR.DTOs\Zeepkist.GTR.DTOs.csproj" />
     </ItemGroup>
 
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\BepInEx\plugins\GTR&quot; /Y" />
-    </Target>
-
 </Project>

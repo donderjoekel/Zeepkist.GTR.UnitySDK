@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using TNRD.Zeepkist.GTR.Cysharp.Threading.Tasks;
 using TNRD.Zeepkist.GTR.FluentResults;
@@ -13,24 +14,29 @@ namespace TNRD.Zeepkist.GTR.SDK.Client;
 
 internal abstract class ClientBase
 {
+    private const int MAX_ATTEMPT_COUNT = 3;
+
+    private readonly Sdk sdk;
     private readonly HttpClient httpClient;
 
     protected bool LogRequestUrl { get; set; }
     protected bool LogResponseOutput { get; set; }
 
-    protected ClientBase(string baseAddress)
+    protected ClientBase(Sdk sdk, string baseAddress)
     {
+        this.sdk = sdk;
+
         httpClient = new HttpClient();
         httpClient.BaseAddress = new Uri(baseAddress);
     }
 
-    private static async UniTask<Result> RefreshAuth()
+    private async UniTask<Result> RefreshAuth()
     {
-        Result refreshResult = await UsersApi.Refresh(UsersApi.ModVersion);
+        Result refreshResult = await sdk.UsersApi.Refresh(sdk.UsersApi.ModVersion);
         if (refreshResult.IsSuccess)
             return Result.Ok();
 
-        Result loginResult = await UsersApi.Login(UsersApi.ModVersion);
+        Result loginResult = await sdk.UsersApi.Login(sdk.UsersApi.ModVersion);
         if (loginResult.IsSuccess)
             return Result.Ok();
 
@@ -49,7 +55,7 @@ internal abstract class ClientBase
             Debug.Log($"[GTR][{msg.Method.Method}] {msg.RequestUri}\nRESPONSE:\n{content}");
     }
 
-    public async UniTask<Result<TResponse>> Get<TResponse>(
+    public async UniTask<Result> Get(
         string requestUri,
         bool addAuth = true,
         bool allowRefresh = true,
@@ -60,7 +66,7 @@ internal abstract class ClientBase
         LogUrl(requestMessage);
 
         if (addAuth)
-            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", UsersApi.AccessToken);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sdk.UsersApi.AccessToken);
 
         HttpResponseMessage response = null;
 
@@ -75,17 +81,78 @@ internal abstract class ClientBase
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            if (!allowRefresh)
-            {
-                return Result.Fail("Unauthorized")
-                    .WithReason(new StatusCodeReason(response.StatusCode));
-            }
+            return await GetWithRefresh(requestUri, addAuth, allowRefresh, response, ct);
+        }
 
+        try
+        {
+            response.EnsureSuccessStatusCode();
+        }
+        catch (Exception e)
+        {
+            return Result.Fail(new ExceptionalError(e))
+                .WithReason(new StatusCodeReason(response.StatusCode));
+        }
+
+        return Result.Ok();
+    }
+
+    private async Task<Result> GetWithRefresh(
+        string requestUri,
+        bool addAuth,
+        bool allowRefresh,
+        HttpResponseMessage response,
+        CancellationToken ct
+    )
+    {
+        if (!allowRefresh)
+        {
+            return Result.Fail("Unauthorized")
+                .WithReason(new StatusCodeReason(response.StatusCode));
+        }
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
             Result refreshAuthResult = await RefreshAuth();
-            if (refreshAuthResult.IsSuccess)
-            {
-                return await Get<TResponse>(requestUri, addAuth, false, ct);
-            }
+            if (!refreshAuthResult.IsSuccess)
+                continue;
+
+            Result result = await Get(requestUri, addAuth, false, ct);
+            if (result.IsSuccess)
+                return result;
+        }
+
+        return Result.Fail("Unauthorized")
+            .WithReason(new StatusCodeReason(response.StatusCode));
+    }
+
+    public async UniTask<Result<TResponse>> Get<TResponse>(
+        string requestUri,
+        bool addAuth = true,
+        bool allowRefresh = true,
+        CancellationToken ct = default
+    )
+    {
+        HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri);
+        LogUrl(requestMessage);
+
+        if (addAuth)
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sdk.UsersApi.AccessToken);
+
+        HttpResponseMessage response = null;
+
+        try
+        {
+            response = await httpClient.SendAsync(requestMessage, ct);
+        }
+        catch (Exception e)
+        {
+            return Result.Fail(new ExceptionalError(e));
+        }
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            return await GetWithRefresh<TResponse>(requestUri, addAuth, allowRefresh, response, ct);
         }
 
         try
@@ -110,6 +177,35 @@ internal abstract class ClientBase
         }
     }
 
+    private async Task<Result<TResponse>> GetWithRefresh<TResponse>(
+        string requestUri,
+        bool addAuth,
+        bool allowRefresh,
+        HttpResponseMessage response,
+        CancellationToken ct
+    )
+    {
+        if (!allowRefresh)
+        {
+            return Result.Fail("Unauthorized")
+                .WithReason(new StatusCodeReason(response.StatusCode));
+        }
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            Result refreshAuthResult = await RefreshAuth();
+            if (!refreshAuthResult.IsSuccess)
+                continue;
+
+            Result<TResponse> result = await Get<TResponse>(requestUri, addAuth, false, ct);
+            if (result.IsSuccess)
+                return result;
+        }
+
+        return Result.Fail("Unauthorized")
+            .WithReason(new StatusCodeReason(response.StatusCode));
+    }
+
     public async UniTask<Result> Post(
         string requestUri,
         object data,
@@ -124,7 +220,7 @@ internal abstract class ClientBase
         LogUrl(requestMessage);
 
         if (addAuth)
-            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", UsersApi.AccessToken);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sdk.UsersApi.AccessToken);
 
         HttpResponseMessage response = null;
 
@@ -139,17 +235,7 @@ internal abstract class ClientBase
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            if (!allowRefresh)
-            {
-                return Result.Fail("Unauthorized")
-                    .WithReason(new StatusCodeReason(response.StatusCode));
-            }
-
-            Result refreshAuthResult = await RefreshAuth();
-            if (refreshAuthResult.IsSuccess)
-            {
-                return await Post(requestUri, data, addAuth, false, ct);
-            }
+            return await PostWithRefresh(requestUri, data, addAuth, allowRefresh, response, ct);
         }
 
         try
@@ -163,6 +249,36 @@ internal abstract class ClientBase
         }
 
         return Result.Ok()
+            .WithReason(new StatusCodeReason(response.StatusCode));
+    }
+
+    private async Task<Result> PostWithRefresh(
+        string requestUri,
+        object data,
+        bool addAuth,
+        bool allowRefresh,
+        HttpResponseMessage response,
+        CancellationToken ct
+    )
+    {
+        if (!allowRefresh)
+        {
+            return Result.Fail("Unauthorized")
+                .WithReason(new StatusCodeReason(response.StatusCode));
+        }
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            Result refreshAuthResult = await RefreshAuth();
+            if (!refreshAuthResult.IsSuccess)
+                continue;
+
+            Result result = await Post(requestUri, data, addAuth, false, ct);
+            if (result.IsSuccess)
+                return result;
+        }
+
+        return Result.Fail("Unauthorized")
             .WithReason(new StatusCodeReason(response.StatusCode));
     }
 
@@ -180,7 +296,7 @@ internal abstract class ClientBase
         LogUrl(requestMessage);
 
         if (addAuth)
-            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", UsersApi.AccessToken);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sdk.UsersApi.AccessToken);
 
         HttpResponseMessage response = null;
 
@@ -195,17 +311,7 @@ internal abstract class ClientBase
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            if (!allowRefresh)
-            {
-                return Result.Fail("Unauthorized")
-                    .WithReason(new StatusCodeReason(response.StatusCode));
-            }
-
-            Result refreshAuthResult = await RefreshAuth();
-            if (refreshAuthResult.IsSuccess)
-            {
-                return await Post<TResponse>(requestUri, data, addAuth, false, ct);
-            }
+            return await PostWithRefresh<TResponse>(requestUri, data, addAuth, allowRefresh, response, ct);
         }
 
         try
@@ -230,6 +336,36 @@ internal abstract class ClientBase
         }
     }
 
+    private async Task<Result<TResponse>> PostWithRefresh<TResponse>(
+        string requestUri,
+        object data,
+        bool addAuth,
+        bool allowRefresh,
+        HttpResponseMessage response,
+        CancellationToken ct
+    )
+    {
+        if (!allowRefresh)
+        {
+            return Result.Fail("Unauthorized")
+                .WithReason(new StatusCodeReason(response.StatusCode));
+        }
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            Result refreshAuthResult = await RefreshAuth();
+            if (!refreshAuthResult.IsSuccess)
+                continue;
+
+            Result<TResponse> result = await Post<TResponse>(requestUri, data, addAuth, false, ct);
+            if (result.IsSuccess)
+                return result;
+        }
+
+        return Result.Fail("Unauthorized")
+            .WithReason(new StatusCodeReason(response.StatusCode));
+    }
+
     public async UniTask<Result> Patch(
         string requestUri,
         object data,
@@ -244,7 +380,7 @@ internal abstract class ClientBase
         LogUrl(requestMessage);
 
         if (addAuth)
-            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", UsersApi.AccessToken);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sdk.UsersApi.AccessToken);
 
         HttpResponseMessage response = null;
 
@@ -259,17 +395,7 @@ internal abstract class ClientBase
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            if (!allowRefresh)
-            {
-                return Result.Fail("Unauthorized")
-                    .WithReason(new StatusCodeReason(response.StatusCode));
-            }
-
-            Result refreshAuthResult = await RefreshAuth();
-            if (refreshAuthResult.IsSuccess)
-            {
-                return await Patch(requestUri, data, addAuth, false, ct);
-            }
+            return await PatchWithRefresh(requestUri, data, addAuth, allowRefresh, response, ct);
         }
 
         try
@@ -286,6 +412,36 @@ internal abstract class ClientBase
             .WithReason(new StatusCodeReason(response.StatusCode));
     }
 
+    private async Task<Result> PatchWithRefresh(
+        string requestUri,
+        object data,
+        bool addAuth,
+        bool allowRefresh,
+        HttpResponseMessage response,
+        CancellationToken ct
+    )
+    {
+        if (!allowRefresh)
+        {
+            return Result.Fail("Unauthorized")
+                .WithReason(new StatusCodeReason(response.StatusCode));
+        }
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            Result refreshAuthResult = await RefreshAuth();
+            if (!refreshAuthResult.IsSuccess)
+                continue;
+
+            Result result = await Patch(requestUri, data, addAuth, false, ct);
+            if (result.IsSuccess)
+                return result;
+        }
+
+        return Result.Fail("Unauthorized")
+            .WithReason(new StatusCodeReason(response.StatusCode));
+    }
+
     public async UniTask<Result> Delete(
         string requestUri,
         bool addAuth = true,
@@ -297,7 +453,7 @@ internal abstract class ClientBase
         LogUrl(requestMessage);
 
         if (addAuth)
-            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", UsersApi.AccessToken);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sdk.UsersApi.AccessToken);
 
         HttpResponseMessage response = null;
 
@@ -312,17 +468,7 @@ internal abstract class ClientBase
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            if (!allowRefresh)
-            {
-                return Result.Fail("Unauthorized")
-                    .WithReason(new StatusCodeReason(response.StatusCode));
-            }
-
-            Result refreshAuthResult = await RefreshAuth();
-            if (refreshAuthResult.IsSuccess)
-            {
-                return await Delete(requestUri, addAuth, false, ct);
-            }
+            return await DeleteWithRefresh(requestUri, addAuth, allowRefresh, response, ct);
         }
 
         try
@@ -336,6 +482,35 @@ internal abstract class ClientBase
         }
 
         return Result.Ok()
+            .WithReason(new StatusCodeReason(response.StatusCode));
+    }
+
+    private async Task<Result> DeleteWithRefresh(
+        string requestUri,
+        bool addAuth,
+        bool allowRefresh,
+        HttpResponseMessage response,
+        CancellationToken ct
+    )
+    {
+        if (!allowRefresh)
+        {
+            return Result.Fail("Unauthorized")
+                .WithReason(new StatusCodeReason(response.StatusCode));
+        }
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            Result refreshAuthResult = await RefreshAuth();
+            if (!refreshAuthResult.IsSuccess)
+                continue;
+
+            Result result = await Delete(requestUri, addAuth, false, ct);
+            if (result.IsSuccess)
+                return result;
+        }
+
+        return Result.Fail("Unauthorized")
             .WithReason(new StatusCodeReason(response.StatusCode));
     }
 
@@ -353,7 +528,7 @@ internal abstract class ClientBase
         LogUrl(requestMessage);
 
         if (addAuth)
-            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", UsersApi.AccessToken);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sdk.UsersApi.AccessToken);
 
         HttpResponseMessage response = null;
 
@@ -368,17 +543,7 @@ internal abstract class ClientBase
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            if (!allowRefresh)
-            {
-                return Result.Fail("Unauthorized")
-                    .WithReason(new StatusCodeReason(response.StatusCode));
-            }
-
-            Result refreshAuthResult = await RefreshAuth();
-            if (refreshAuthResult.IsSuccess)
-            {
-                return await Delete(requestUri, data, addAuth, false, ct);
-            }
+            return await DeleteWithRefresh(requestUri, data, addAuth, allowRefresh, response, ct);
         }
 
         try
@@ -392,6 +557,36 @@ internal abstract class ClientBase
         }
 
         return Result.Ok()
+            .WithReason(new StatusCodeReason(response.StatusCode));
+    }
+
+    private async Task<Result> DeleteWithRefresh(
+        string requestUri,
+        object data,
+        bool addAuth,
+        bool allowRefresh,
+        HttpResponseMessage response,
+        CancellationToken ct
+    )
+    {
+        if (!allowRefresh)
+        {
+            return Result.Fail("Unauthorized")
+                .WithReason(new StatusCodeReason(response.StatusCode));
+        }
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            Result refreshAuthResult = await RefreshAuth();
+            if (!refreshAuthResult.IsSuccess)
+                continue;
+
+            Result result = await Delete(requestUri, data, addAuth, false, ct);
+            if (result.IsSuccess)
+                return result;
+        }
+
+        return Result.Fail("Unauthorized")
             .WithReason(new StatusCodeReason(response.StatusCode));
     }
 }

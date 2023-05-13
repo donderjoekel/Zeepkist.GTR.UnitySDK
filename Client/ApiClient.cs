@@ -2,18 +2,17 @@
 
 internal class ApiClient : ClientBase
 {
-    public static ApiClient Instance { get; private set; }
-
-    public static void Create(string baseAddress, bool logRequestUrl, bool logResponseOutput)
+    public static ApiClient Create(Sdk sdk, string baseAddress, bool logRequestUrl, bool logResponseOutput)
     {
-        Instance = new ApiClient(baseAddress);
-        Instance.LogRequestUrl = logRequestUrl;
-        Instance.LogResponseOutput = logResponseOutput;
+        ApiClient instance = new ApiClient(sdk, baseAddress);
+        instance.LogRequestUrl = logRequestUrl;
+        instance.LogResponseOutput = logResponseOutput;
+        return instance;
     }
 
     /// <inheritdoc />
-    private ApiClient(string baseAddress)
-        : base(baseAddress)
+    private ApiClient(Sdk sdk, string baseAddress)
+        : base(sdk, baseAddress)
     {
     }
 }

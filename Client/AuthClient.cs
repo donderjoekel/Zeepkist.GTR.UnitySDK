@@ -2,16 +2,14 @@
 
 internal class AuthClient : ClientBase
 {
-    public static AuthClient Instance { get; private set; }
-
-    public static void Create(string baseAddress)
+    public static AuthClient Create(Sdk sdk, string baseAddress)
     {
-        Instance = new AuthClient(baseAddress);
+        return new AuthClient(sdk, baseAddress);
     }
 
     /// <inheritdoc />
-    private AuthClient(string baseAddress)
-        : base(baseAddress)
+    private AuthClient(Sdk sdk, string baseAddress)
+        : base(sdk, baseAddress)
     {
     }
 }

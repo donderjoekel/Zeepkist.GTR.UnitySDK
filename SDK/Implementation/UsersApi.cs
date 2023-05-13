@@ -11,7 +11,6 @@ using TNRD.Zeepkist.GTR.DTOs.ResponseModels;
 using TNRD.Zeepkist.GTR.FluentResults;
 using TNRD.Zeepkist.GTR.SDK.Client;
 using TNRD.Zeepkist.GTR.SDK.Errors;
-using TNRD.Zeepkist.GTR.SDK.Models;
 using TNRD.Zeepkist.GTR.SDK.Models.Request;
 using TNRD.Zeepkist.GTR.SDK.Models.Response;
 using UnityEngine;
@@ -20,7 +19,7 @@ using Result = TNRD.Zeepkist.GTR.FluentResults.Result;
 namespace TNRD.Zeepkist.GTR.SDK;
 
 [PublicAPI]
-public static class UsersApi
+public class UsersApi : IUsersApi
 {
     private const string KEY_USER_ID = "GTR.UserId";
     private const string KEY_STEAM_ID = "GTR.SteamId";
@@ -28,23 +27,25 @@ public static class UsersApi
     private const string KEY_REFRESH_TOKEN = "GTR.RefreshToken";
     private const string KEY_MOD_VERSION = "GTR.ModVersion";
 
+    private readonly Sdk sdk;
+
     /// <summary>
     /// The user id that matches the local user in the database
     /// </summary>
     [Obsolete("Use UserId instead")]
-    public static int Id => UserId;
+    public int Id => UserId;
 
     /// <summary>
     /// Used to check if we are already in possession of all tokens and data
     /// </summary>
-    private static bool HasTokens => UserId >= 0 &&
-                                     !string.IsNullOrEmpty(AccessToken) &&
-                                     !string.IsNullOrEmpty(RefreshToken);
+    private bool HasTokens => UserId >= 0 &&
+                              !string.IsNullOrEmpty(AccessToken) &&
+                              !string.IsNullOrEmpty(RefreshToken);
 
     /// <summary>
     /// The user id that matches the local user in the database
     /// </summary>
-    public static int UserId
+    public int UserId
     {
         get => PlayerPrefs.GetInt(KEY_USER_ID, -1);
         private set
@@ -54,7 +55,7 @@ public static class UsersApi
         }
     }
 
-    private static string SteamId
+    private string SteamId
     {
         get => PlayerPrefs.GetString(KEY_STEAM_ID, string.Empty);
         set
@@ -67,7 +68,7 @@ public static class UsersApi
     /// <summary>
     /// The access token that is used for authentication 
     /// </summary>
-    internal static string AccessToken
+    public string AccessToken
     {
         get => PlayerPrefs.GetString(KEY_ACCESS_TOKEN, string.Empty);
         set
@@ -80,7 +81,7 @@ public static class UsersApi
     /// <summary>
     /// The refresh token that is used for refreshing authentication
     /// </summary>
-    private static string RefreshToken
+    private string RefreshToken
     {
         get => PlayerPrefs.GetString(KEY_REFRESH_TOKEN, string.Empty);
         set
@@ -90,7 +91,7 @@ public static class UsersApi
         }
     }
 
-    internal static string ModVersion
+    public string ModVersion
     {
         get => PlayerPrefs.GetString(KEY_MOD_VERSION, string.Empty);
         set
@@ -100,25 +101,30 @@ public static class UsersApi
         }
     }
 
-    public static async UniTask<Result<UsersGetAllResponseDTO>> Get(Action<GenericGetRequestDTOBuilder> builder)
+    public UsersApi(Sdk sdk)
+    {
+        this.sdk = sdk;
+    }
+
+    public async UniTask<Result<UsersGetAllResponseDTO>> Get(Action<GenericGetRequestDTOBuilder> builder)
     {
         GenericGetRequestDTOBuilder b = new();
         builder?.Invoke(b);
         GenericGetRequestDTO dto = b.Build();
 
-        return await ApiClient.Instance.Get<UsersGetAllResponseDTO>($"users?{dto.ToQueryString()}");
+        return await sdk.ApiClient.Get<UsersGetAllResponseDTO>($"users?{dto.ToQueryString()}");
     }
 
-    public static async UniTask<Result<UserResponseModel>> GetById(Action<GenericIdRequestDTOBuilder> builder)
+    public async UniTask<Result<UserResponseModel>> GetById(Action<GenericIdRequestDTOBuilder> builder)
     {
         GenericIdRequestDTOBuilder b = new();
         builder?.Invoke(b);
         GenericIdRequestDTO dto = b.Build();
 
-        return await ApiClient.Instance.Get<UserResponseModel>($"users/{dto.ToQueryString()}");
+        return await sdk.ApiClient.Get<UserResponseModel>($"users/{dto.ToQueryString()}");
     }
 
-    public static async UniTask<Result<UserResponseModel>> GetBySteamId(
+    public async UniTask<Result<UserResponseModel>> GetBySteamId(
         Action<UsersGetBySteamIdRequestDTOBuilder> builder
     )
     {
@@ -126,34 +132,34 @@ public static class UsersApi
         builder?.Invoke(b);
         UsersGetBySteamIdRequestDTO dto = b.Build();
 
-        return await ApiClient.Instance.Get<UserResponseModel>($"users/steam/{dto.ToQueryString()}");
+        return await sdk.ApiClient.Get<UserResponseModel>($"users/steam/{dto.ToQueryString()}");
     }
 
-    public static async UniTask<Result<UsersRankingResponseDTO>> Ranking(
-        Action<UsersRankingGetRequestDTOBuilder> builder
+    public async UniTask<Result<UsersRankingResponseDTO>> Ranking(
+        Action<GenericGetRequestDTOBuilder> builder
     )
-    {
-        UsersRankingGetRequestDTOBuilder b = new();
-        builder?.Invoke(b);
-        UsersRankingGetRequestDTO dto = b.Build();
-
-        return await ApiClient.Instance.Get<UsersRankingResponseDTO>($"users/ranking?{dto.ToQueryString()}");
-    }
-
-    public static async UniTask<Result<UsersRankingsResponseDTO>> Rankings(Action<GenericGetRequestDTOBuilder> builder)
     {
         GenericGetRequestDTOBuilder b = new();
         builder?.Invoke(b);
         GenericGetRequestDTO dto = b.Build();
 
-        return await ApiClient.Instance.Get<UsersRankingsResponseDTO>($"users/rankings?{dto.ToQueryString()}");
+        return await sdk.ApiClient.Get<UsersRankingResponseDTO>($"users/ranking?{dto.ToQueryString()}");
+    }
+
+    public async UniTask<Result<UsersRankingsResponseDTO>> Rankings(Action<GenericGetRequestDTOBuilder> builder)
+    {
+        GenericGetRequestDTOBuilder b = new();
+        builder?.Invoke(b);
+        GenericGetRequestDTO dto = b.Build();
+
+        return await sdk.ApiClient.Get<UsersRankingsResponseDTO>($"users/rankings?{dto.ToQueryString()}");
     }
 
     /// <summary>
     /// Attempts to log in the user
     /// </summary>
     /// <returns></returns>
-    public static async UniTask<Result> Login(string modVersion)
+    public async UniTask<Result> Login(string modVersion)
     {
         if (!SteamClient.IsLoggedOn)
         {
@@ -175,7 +181,7 @@ public static class UsersApi
         };
 
         Result<LoginResponseModel> result =
-            await AuthClient.Instance.Post<LoginResponseModel>("game/login", loginRequestModel, false);
+            await sdk.AuthClient.Post<LoginResponseModel>("game/login", loginRequestModel, false);
 
         if (result.IsFailed)
             return result.ToResult();
@@ -189,7 +195,7 @@ public static class UsersApi
         return Result.Ok();
     }
 
-    private static string CreateAuthenticationTicket()
+    private string CreateAuthenticationTicket()
     {
         AuthTicket authSessionTicket = SteamUser.GetAuthSessionTicket();
         StringBuilder stringBuilder = new StringBuilder();
@@ -201,7 +207,7 @@ public static class UsersApi
         return stringBuilder.ToString();
     }
 
-    internal static async UniTask<Result> Refresh(string modVersion)
+    public async UniTask<Result> Refresh(string modVersion)
     {
         if (!SteamClient.IsLoggedOn)
         {
@@ -221,7 +227,7 @@ public static class UsersApi
         };
 
         Result<RefreshResponseModel> result =
-            await AuthClient.Instance.Post<RefreshResponseModel>("game/refresh", refreshRequestModel, false, false);
+            await sdk.AuthClient.Post<RefreshResponseModel>("game/refresh", refreshRequestModel, false, false);
 
         if (result.IsFailed)
         {
@@ -249,23 +255,5 @@ public static class UsersApi
         ModVersion = modVersion;
 
         return Result.Ok();
-    }
-
-    /// <summary>
-    /// Attempts to update the name of the current player
-    /// </summary>
-    /// <returns></returns>
-    public static async UniTask<Result> UpdateName()
-    {
-        if (!SteamClient.IsLoggedOn)
-        {
-            return Result.Fail(new SteamNotLoggedOnError());
-        }
-
-        UsersUpdateNameRequestDTO requestDTO = new UsersUpdateNameRequestDTOBuilder()
-            .WithSteamName(SteamClient.Name)
-            .Build();
-
-        return await ApiClient.Instance.Post("users/name", requestDTO);
     }
 }
