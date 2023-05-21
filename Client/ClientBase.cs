@@ -62,6 +62,27 @@ internal abstract class ClientBase
         CancellationToken ct = default
     )
     {
+        Result result = null;
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            result = await GetInternal(requestUri, addAuth, allowRefresh, ct);
+            if (result.IsSuccess)
+                break;
+
+            await UniTask.Delay(TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), cancellationToken: ct);
+        }
+
+        return result;
+    }
+
+    private async UniTask<Result> GetInternal(
+        string requestUri,
+        bool addAuth = true,
+        bool allowRefresh = true,
+        CancellationToken ct = default
+    )
+    {
         HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri);
         LogUrl(requestMessage);
 
@@ -127,6 +148,27 @@ internal abstract class ClientBase
     }
 
     public async UniTask<Result<TResponse>> Get<TResponse>(
+        string requestUri,
+        bool addAuth = true,
+        bool allowRefresh = true,
+        CancellationToken ct = default
+    )
+    {
+        Result<TResponse> result = null;
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            result = await GetInternal<TResponse>(requestUri, addAuth, allowRefresh, ct);
+            if (result.IsSuccess)
+                break;
+
+            await UniTask.Delay(TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), cancellationToken: ct);
+        }
+
+        return result;
+    }
+
+    private async UniTask<Result<TResponse>> GetInternal<TResponse>(
         string requestUri,
         bool addAuth = true,
         bool allowRefresh = true,
@@ -214,6 +256,28 @@ internal abstract class ClientBase
         CancellationToken ct = default
     )
     {
+        Result result = null;
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            result = await PostInternal(requestUri, data, addAuth, allowRefresh, ct);
+            if (result.IsSuccess)
+                break;
+
+            await UniTask.Delay(TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), cancellationToken: ct);
+        }
+
+        return result;
+    }
+
+    private async UniTask<Result> PostInternal(
+        string requestUri,
+        object data,
+        bool addAuth = true,
+        bool allowRefresh = true,
+        CancellationToken ct = default
+    )
+    {
         string requestJson = JsonConvert.SerializeObject(data);
         HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, requestUri);
         requestMessage.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
@@ -283,6 +347,28 @@ internal abstract class ClientBase
     }
 
     public async UniTask<Result<TResponse>> Post<TResponse>(
+        string requestUri,
+        object data,
+        bool addAuth = true,
+        bool allowRefresh = true,
+        CancellationToken ct = default
+    )
+    {
+        Result<TResponse> result = null;
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            result = await PostInternal<TResponse>(requestUri, data, addAuth, allowRefresh, ct);
+            if (result.IsSuccess)
+                break;
+
+            await UniTask.Delay(TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), cancellationToken: ct);
+        }
+
+        return result;
+    }
+
+    private async UniTask<Result<TResponse>> PostInternal<TResponse>(
         string requestUri,
         object data,
         bool addAuth = true,
@@ -374,6 +460,28 @@ internal abstract class ClientBase
         CancellationToken ct = default
     )
     {
+        Result result = null;
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            result = await PatchInternal(requestUri, data, addAuth, allowRefresh, ct);
+            if (result.IsSuccess)
+                break;
+
+            await UniTask.Delay(TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), cancellationToken: ct);
+        }
+
+        return result;
+    }
+
+    private async UniTask<Result> PatchInternal(
+        string requestUri,
+        object data,
+        bool addAuth = true,
+        bool allowRefresh = true,
+        CancellationToken ct = default
+    )
+    {
         string requestJson = JsonConvert.SerializeObject(data);
         HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Put, requestUri);
         requestMessage.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
@@ -449,6 +557,27 @@ internal abstract class ClientBase
         CancellationToken ct = default
     )
     {
+        Result result = null;
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            result = await DeleteInternal(requestUri, addAuth, allowRefresh, ct);
+            if (result.IsSuccess)
+                break;
+
+            await UniTask.Delay(TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), cancellationToken: ct);
+        }
+
+        return result;
+    }
+
+    private async UniTask<Result> DeleteInternal(
+        string requestUri,
+        bool addAuth = true,
+        bool allowRefresh = true,
+        CancellationToken ct = default
+    )
+    {
         HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Delete, requestUri);
         LogUrl(requestMessage);
 
@@ -515,6 +644,28 @@ internal abstract class ClientBase
     }
 
     public async UniTask<Result> Delete(
+        string requestUri,
+        object data,
+        bool addAuth = true,
+        bool allowRefresh = true,
+        CancellationToken ct = default
+    )
+    {
+        Result result = null;
+
+        for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
+        {
+            result = await DeleteInternal(requestUri, data, addAuth, allowRefresh, ct);
+            if (result.IsSuccess)
+                break;
+
+            await UniTask.Delay(TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), cancellationToken: ct);
+        }
+
+        return result;
+    }
+    
+    private async UniTask<Result> DeleteInternal(
         string requestUri,
         object data,
         bool addAuth = true,
