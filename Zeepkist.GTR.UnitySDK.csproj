@@ -16,34 +16,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-        <PackageReference Include="System.ValueTuple" Version="4.5.0" />
         <PackageReference Include="UnityEngine.Modules" Version="2021.3.10" IncludeAssets="compile" />
+        <PackageReference Include="Zeepkist.GameLibs" Version="1.0.0-alpha.15.26.345" />
     </ItemGroup>
 
     <ItemGroup>
         <Reference Include="netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Reference Include="Facepunch.Steamworks">
-            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\Zeepkist_Data\Managed\Facepunch.Steamworks.dll</HintPath>
-        </Reference>
-        <Reference Include="l2Localization">
-            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\Zeepkist_Data\Managed\l2Localization.dll</HintPath>
-        </Reference>
-        <Reference Include="Newtonsoft.Json">
-            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\Zeepkist_Data\Managed\Newtonsoft.Json.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Net.Http">
-            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\Zeepkist_Data\Managed\System.Net.Http.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.TextMeshPro">
-            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\Zeepkist_Data\Managed\Unity.TextMeshPro.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UI">
-            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Zeepkist\Zeepkist_Data\Managed\UnityEngine.UI.dll</HintPath>
-        </Reference>
     </ItemGroup>
 
     <ItemGroup>
