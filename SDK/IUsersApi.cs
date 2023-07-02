@@ -43,7 +43,7 @@ public interface IUsersApi
     /// Attempts to log in the user
     /// </summary>
     /// <returns></returns>
-    UniTask<Result> Login(string modVersion);
+    UniTask<Result> Login(string modVersion, bool allowRefresh);
 
     UniTask<Result> Refresh(string modVersion);
 }

@@ -159,14 +159,14 @@ public class UsersApi : IUsersApi
     /// Attempts to log in the user
     /// </summary>
     /// <returns></returns>
-    public async UniTask<Result> Login(string modVersion)
+    public async UniTask<Result> Login(string modVersion, bool allowRefresh)
     {
         if (!SteamClient.IsLoggedOn)
         {
             return Result.Fail(new SteamNotLoggedOnError());
         }
 
-        if (HasTokens)
+        if (HasTokens && allowRefresh)
         {
             Result refreshResult = await Refresh(modVersion);
             if (refreshResult.IsSuccess)
@@ -239,7 +239,7 @@ public class UsersApi : IUsersApi
             {
                 AccessToken = string.Empty;
                 RefreshToken = string.Empty;
-                return await Login(modVersion);
+                return await Login(modVersion, false);
             }
         }
 
