@@ -13,7 +13,6 @@ using TNRD.Zeepkist.GTR.SDK.Client;
 using TNRD.Zeepkist.GTR.SDK.Errors;
 using TNRD.Zeepkist.GTR.SDK.Models.Request;
 using TNRD.Zeepkist.GTR.SDK.Models.Response;
-using UnityEngine;
 using Result = TNRD.Zeepkist.GTR.FluentResults.Result;
 
 namespace TNRD.Zeepkist.GTR.SDK;
@@ -45,53 +44,21 @@ public class UsersApi : IUsersApi
     /// <summary>
     /// The user id that matches the local user in the database
     /// </summary>
-    public int UserId
-    {
-        get => PlayerPrefs.GetInt(KEY_USER_ID, -1);
-        private set
-        {
-            PlayerPrefs.SetInt(KEY_USER_ID, value);
-            PlayerPrefs.Save();
-        }
-    }
+    public int UserId { get; private set; } = -1;
 
     private string SteamId => ((ulong)SteamClient.SteamId).ToString();
 
     /// <summary>
     /// The access token that is used for authentication 
     /// </summary>
-    public string AccessToken
-    {
-        get => PlayerPrefs.GetString(KEY_ACCESS_TOKEN, string.Empty);
-        set
-        {
-            PlayerPrefs.SetString(KEY_ACCESS_TOKEN, value);
-            PlayerPrefs.Save();
-        }
-    }
+    public string AccessToken { get; private set; } = null;
 
     /// <summary>
     /// The refresh token that is used for refreshing authentication
     /// </summary>
-    private string RefreshToken
-    {
-        get => PlayerPrefs.GetString(KEY_REFRESH_TOKEN, string.Empty);
-        set
-        {
-            PlayerPrefs.SetString(KEY_REFRESH_TOKEN, value);
-            PlayerPrefs.Save();
-        }
-    }
+    private string RefreshToken { get; set; } = null;
 
-    public string ModVersion
-    {
-        get => PlayerPrefs.GetString(KEY_MOD_VERSION, string.Empty);
-        set
-        {
-            PlayerPrefs.SetString(KEY_MOD_VERSION, value);
-            PlayerPrefs.Save();
-        }
-    }
+    public string ModVersion { get; private set; } = null;
 
     public UsersApi(Sdk sdk)
     {
