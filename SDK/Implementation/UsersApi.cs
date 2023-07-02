@@ -227,7 +227,7 @@ public class UsersApi : IUsersApi
         };
 
         Result<RefreshResponseModel> result =
-            await sdk.AuthClient.Post<RefreshResponseModel>("game/refresh", refreshRequestModel, false, false);
+            await sdk.AuthClient.Post<RefreshResponseModel>("game/refresh", refreshRequestModel, false, false, true);
 
         if (result.IsFailed)
         {

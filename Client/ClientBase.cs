@@ -36,7 +36,7 @@ internal abstract class ClientBase
         if (refreshResult.IsSuccess)
             return Result.Ok();
 
-        Result loginResult = await sdk.UsersApi.Login(sdk.UsersApi.ModVersion);
+        Result loginResult = await sdk.UsersApi.Login(sdk.UsersApi.ModVersion, false);
         if (loginResult.IsSuccess)
             return Result.Ok();
 
@@ -351,6 +351,7 @@ internal abstract class ClientBase
         object data,
         bool addAuth = true,
         bool allowRefresh = true,
+        bool allowedToFail = false,
         CancellationToken ct = default
     )
     {
@@ -358,8 +359,8 @@ internal abstract class ClientBase
 
         for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
         {
-            result = await PostInternal<TResponse>(requestUri, data, addAuth, allowRefresh, ct);
-            if (result.IsSuccess)
+            result = await PostInternal<TResponse>(requestUri, data, addAuth, allowRefresh, allowedToFail, ct);
+            if (result.IsSuccess || allowedToFail)
                 break;
 
             await UniTask.Delay(TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), cancellationToken: ct);
@@ -373,6 +374,7 @@ internal abstract class ClientBase
         object data,
         bool addAuth = true,
         bool allowRefresh = true,
+        bool allowedToFail = false,
         CancellationToken ct = default
     )
     {
@@ -397,7 +399,13 @@ internal abstract class ClientBase
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            return await PostWithRefresh<TResponse>(requestUri, data, addAuth, allowRefresh, response, ct);
+            return await PostWithRefresh<TResponse>(requestUri,
+                data,
+                addAuth,
+                allowRefresh,
+                allowedToFail,
+                response,
+                ct);
         }
 
         try
@@ -427,6 +435,7 @@ internal abstract class ClientBase
         object data,
         bool addAuth,
         bool allowRefresh,
+        bool allowedToFail,
         HttpResponseMessage response,
         CancellationToken ct
     )
@@ -443,7 +452,7 @@ internal abstract class ClientBase
             if (!refreshAuthResult.IsSuccess)
                 continue;
 
-            Result<TResponse> result = await Post<TResponse>(requestUri, data, addAuth, false, ct);
+            Result<TResponse> result = await Post<TResponse>(requestUri, data, addAuth, false, allowedToFail, ct);
             if (result.IsSuccess)
                 return result;
         }
@@ -664,7 +673,7 @@ internal abstract class ClientBase
 
         return result;
     }
-    
+
     private async UniTask<Result> DeleteInternal(
         string requestUri,
         object data,
