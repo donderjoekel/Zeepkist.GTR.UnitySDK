@@ -55,15 +55,7 @@ public class UsersApi : IUsersApi
         }
     }
 
-    private string SteamId
-    {
-        get => PlayerPrefs.GetString(KEY_STEAM_ID, string.Empty);
-        set
-        {
-            PlayerPrefs.SetString(KEY_STEAM_ID, value);
-            PlayerPrefs.Save();
-        }
-    }
+    private string SteamId => ((ulong)SteamClient.SteamId).ToString();
 
     /// <summary>
     /// The access token that is used for authentication 
@@ -187,7 +179,6 @@ public class UsersApi : IUsersApi
             return result.ToResult();
 
         UserId = result.Value.UserId;
-        SteamId = result.Value.SteamId;
         AccessToken = result.Value.AccessToken;
         RefreshToken = result.Value.RefreshToken;
         ModVersion = modVersion;
@@ -249,7 +240,6 @@ public class UsersApi : IUsersApi
         }
 
         UserId = result.Value.UserId;
-        SteamId = result.Value.SteamId;
         AccessToken = result.Value.AccessToken;
         RefreshToken = result.Value.RefreshToken;
         ModVersion = modVersion;
