@@ -84,6 +84,7 @@ public class Sdk
     private readonly UpvotesApi upvotesApi;
     private readonly UsersApi usersApi;
     private readonly VotesApi votesApi;
+    private readonly VersionApi versionApi;
 
     public IFavoritesApi FavoritesApi => favoritesApi;
     public ILevelsApi LevelsApi => levelsApi;
@@ -91,6 +92,7 @@ public class Sdk
     public IUpvotesApi UpvotesApi => upvotesApi;
     public IUsersApi UsersApi => usersApi;
     public IVotesApi VotesApi => votesApi;
+    public IVersionApi VersionApi => versionApi;
 
     private Sdk(
         string apiAddress,
@@ -119,5 +121,6 @@ public class Sdk
         upvotesApi = new UpvotesApi(this);
         usersApi = new UsersApi(this);
         votesApi = new VotesApi(this);
+        versionApi = new VersionApi(this);
     }
 }
