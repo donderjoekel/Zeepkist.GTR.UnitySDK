@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using JetBrains.Annotations;
 using Steamworks;
+using Steamworks.Data;
 using TNRD.Zeepkist.GTR.Cysharp.Threading.Tasks;
 using TNRD.Zeepkist.GTR.DTOs.RequestDTOs;
 using TNRD.Zeepkist.GTR.DTOs.ResponseDTOs;
@@ -15,7 +16,7 @@ using TNRD.Zeepkist.GTR.SDK.Models.Request;
 using TNRD.Zeepkist.GTR.SDK.Models.Response;
 using Result = TNRD.Zeepkist.GTR.FluentResults.Result;
 
-namespace TNRD.Zeepkist.GTR.SDK;
+namespace TNRD.Zeepkist.GTR.SDK.Implementation;
 
 [PublicAPI]
 public class UsersApi : IUsersApi
@@ -155,7 +156,7 @@ public class UsersApi : IUsersApi
 
     private string CreateAuthenticationTicket()
     {
-        AuthTicket authSessionTicket = SteamUser.GetAuthSessionTicket();
+        AuthTicket authSessionTicket = SteamUser.GetAuthSessionTicket(new NetIdentity());
         StringBuilder stringBuilder = new StringBuilder();
         for (int index = 0; index < authSessionTicket.Data.Length; ++index)
         {

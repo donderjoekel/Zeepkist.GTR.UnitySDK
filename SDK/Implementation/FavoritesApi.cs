@@ -6,7 +6,7 @@ using TNRD.Zeepkist.GTR.DTOs.ResponseDTOs;
 using TNRD.Zeepkist.GTR.DTOs.ResponseModels;
 using TNRD.Zeepkist.GTR.FluentResults;
 
-namespace TNRD.Zeepkist.GTR.SDK;
+namespace TNRD.Zeepkist.GTR.SDK.Implementation;
 
 [PublicAPI]
 public class FavoritesApi : IFavoritesApi

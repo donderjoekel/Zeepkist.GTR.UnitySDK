@@ -4,9 +4,8 @@ using TNRD.Zeepkist.GTR.Cysharp.Threading.Tasks;
 using TNRD.Zeepkist.GTR.DTOs.RequestDTOs;
 using TNRD.Zeepkist.GTR.DTOs.ResponseDTOs;
 using TNRD.Zeepkist.GTR.FluentResults;
-using TNRD.Zeepkist.GTR.SDK.Client;
 
-namespace TNRD.Zeepkist.GTR.SDK;
+namespace TNRD.Zeepkist.GTR.SDK.Implementation;
 
 [PublicAPI]
 public class RecordsApi : IRecordsApi

@@ -17,7 +17,7 @@
 
     <ItemGroup>
         <PackageReference Include="UnityEngine.Modules" Version="2021.3.10" IncludeAssets="compile" />
-        <PackageReference Include="Zeepkist.GameLibs" Version="1.0.0-alpha.15.26.345" />
+        <PackageReference Include="Zeepkist.GameLibs" Version="1.0.0-alpha.15.33.366" />
     </ItemGroup>
 
     <ItemGroup>
