@@ -115,6 +115,11 @@ public class UsersApi : IUsersApi
         return await sdk.ApiClient.Get<UsersRankingsResponseDTO>($"users/rankings?{dto.ToQueryString()}");
     }
 
+    public async UniTask<Result> UpdateStats(UsersUpdateStatsRequestDTO stats)
+    {
+        return await sdk.ApiClient.Post("users/stats", stats);
+    }
+
     /// <summary>
     /// Attempts to log in the user
     /// </summary>

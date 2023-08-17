@@ -38,6 +38,8 @@ public interface IUsersApi
     );
 
     UniTask<Result<UsersRankingsResponseDTO>> Rankings(Action<GenericGetRequestDTOBuilder> builder);
+    
+    UniTask<Result> UpdateStats(UsersUpdateStatsRequestDTO stats);
 
     /// <summary>
     /// Attempts to log in the user
