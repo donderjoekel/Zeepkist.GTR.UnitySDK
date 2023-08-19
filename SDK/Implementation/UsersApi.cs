@@ -117,7 +117,7 @@ public class UsersApi : IUsersApi
 
     public async UniTask<Result> UpdateStats(UsersUpdateStatsRequestDTO stats)
     {
-        return await sdk.ApiClient.Post("users/stats", stats);
+        return await sdk.ApiClient.Post("stats", stats);
     }
 
     /// <summary>
