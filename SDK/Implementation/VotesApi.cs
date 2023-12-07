@@ -17,11 +17,6 @@ public class VotesApi : IVotesApi
         this.sdk = sdk;
     }
 
-    public UniTask<Result<VotesGetCategoriesResponseDTO>> Categories()
-    {
-        return sdk.ApiClient.Get<VotesGetCategoriesResponseDTO>("votes/categories");
-    }
-
     public UniTask<Result<VotesGetResponseDTO>> Get(Action<VotesGetRequestDTOBuilder> builder)
     {
         VotesGetRequestDTOBuilder b = new();

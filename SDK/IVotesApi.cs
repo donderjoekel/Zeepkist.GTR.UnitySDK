@@ -8,7 +8,6 @@ namespace TNRD.Zeepkist.GTR.SDK;
 
 public interface IVotesApi
 {
-    UniTask<Result<VotesGetCategoriesResponseDTO>> Categories();
     UniTask<Result<VotesGetResponseDTO>> Get(Action<VotesGetRequestDTOBuilder> builder);
     UniTask<Result<VotesGetAverageResponseDTO>> Get(Action<VotesGetAverageRequestDTOBuilder> builder);
     UniTask<Result> Submit(Action<VotesSubmitRequestDTOBuilder> builder);

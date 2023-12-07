@@ -75,16 +75,21 @@ public class UsersApi : IUsersApi
         return await sdk.ApiClient.Get<UsersGetAllResponseDTO>($"users?{dto.ToQueryString()}");
     }
 
-    public async UniTask<Result<UserResponseModel>> GetById(Action<GenericIdRequestDTOBuilder> builder)
+    public UniTask<Result<UserResponseModel>> GetById(int id)
     {
-        GenericIdRequestDTOBuilder b = new();
-        builder?.Invoke(b);
-        GenericIdRequestDTO dto = b.Build();
-
-        return await sdk.ApiClient.Get<UserResponseModel>($"users/{dto.ToQueryString()}");
+        return sdk.ApiClient.Get<UserResponseModel>($"users/{id}");
     }
 
-    public async UniTask<Result<UserResponseModel>> GetBySteamId(
+    public UniTask<Result<UsersGetByIdsResponseDTO>> GetByIds(Action<UsersGetByIdsRequestDTOBuilder> builder)
+    {
+        UsersGetByIdsRequestDTOBuilder b = new();
+        builder?.Invoke(b);
+        UsersGetByIdsRequestDTO dto = b.Build();
+
+        return sdk.ApiClient.Get<UsersGetByIdsResponseDTO>($"users/ids?{dto.ToQueryString()}");
+    }
+
+    public UniTask<Result<UserResponseModel>> GetBySteamId(
         Action<UsersGetBySteamIdRequestDTOBuilder> builder
     )
     {
@@ -92,10 +97,10 @@ public class UsersApi : IUsersApi
         builder?.Invoke(b);
         UsersGetBySteamIdRequestDTO dto = b.Build();
 
-        return await sdk.ApiClient.Get<UserResponseModel>($"users/steam/{dto.ToQueryString()}");
+        return sdk.ApiClient.Get<UserResponseModel>($"users/steam/{dto.ToQueryString()}");
     }
 
-    public async UniTask<Result<UsersRankingResponseDTO>> Ranking(
+    public UniTask<Result<UsersRankingResponseDTO>> Ranking(
         Action<GenericGetRequestDTOBuilder> builder
     )
     {
@@ -103,21 +108,21 @@ public class UsersApi : IUsersApi
         builder?.Invoke(b);
         GenericGetRequestDTO dto = b.Build();
 
-        return await sdk.ApiClient.Get<UsersRankingResponseDTO>($"users/ranking?{dto.ToQueryString()}");
+        return sdk.ApiClient.Get<UsersRankingResponseDTO>($"users/ranking?{dto.ToQueryString()}");
     }
 
-    public async UniTask<Result<UsersRankingsResponseDTO>> Rankings(Action<GenericGetRequestDTOBuilder> builder)
+    public UniTask<Result<UsersRankingsResponseDTO>> Rankings(Action<GenericGetRequestDTOBuilder> builder)
     {
         GenericGetRequestDTOBuilder b = new();
         builder?.Invoke(b);
         GenericGetRequestDTO dto = b.Build();
 
-        return await sdk.ApiClient.Get<UsersRankingsResponseDTO>($"users/rankings?{dto.ToQueryString()}");
+        return sdk.ApiClient.Get<UsersRankingsResponseDTO>($"users/rankings?{dto.ToQueryString()}");
     }
 
-    public async UniTask<Result> UpdateStats(UsersUpdateStatsRequestDTO stats)
+    public UniTask<Result> UpdateStats(UsersUpdateStatsRequestDTO stats)
     {
-        return await sdk.ApiClient.Post("stats", stats);
+        return sdk.ApiClient.Post("stats", stats);
     }
 
     /// <summary>
@@ -138,7 +143,7 @@ public class UsersApi : IUsersApi
                 return Result.Ok();
         }
 
-        LoginRequestModel loginRequestModel = new LoginRequestModel()
+        LoginRequestModel loginRequestModel = new()
         {
             ModVersion = modVersion,
             AuthenticationTicket = CreateAuthenticationTicket(),
@@ -162,7 +167,7 @@ public class UsersApi : IUsersApi
     private string CreateAuthenticationTicket()
     {
         AuthTicket authSessionTicket = SteamUser.GetAuthSessionTicket(new NetIdentity());
-        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder stringBuilder = new();
         for (int index = 0; index < authSessionTicket.Data.Length; ++index)
         {
             stringBuilder.AppendFormat("{0:x2}", authSessionTicket.Data[index]);
@@ -183,7 +188,7 @@ public class UsersApi : IUsersApi
             return Result.Fail("Missing tokens");
         }
 
-        RefreshRequestModel refreshRequestModel = new RefreshRequestModel()
+        RefreshRequestModel refreshRequestModel = new()
         {
             ModVersion = modVersion,
             RefreshToken = RefreshToken,

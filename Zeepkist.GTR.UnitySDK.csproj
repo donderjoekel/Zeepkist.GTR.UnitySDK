@@ -9,6 +9,7 @@
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
         <DefineConstants>TRACE;UNITASK_UGUI_SUPPORT;UNITY_2017_1;UNITY_2017_1_OR_NEWER;UNITY_2017_2;UNITY_2017_2_OR_NEWER;UNITY_2017_3;UNITY_2017_3_OR_NEWER;UNITY_2017_4;UNITY_2017_4_OR_NEWER;UNITY_2018_1;UNITY_2018_1_OR_NEWER;UNITY_2018_2;UNITY_2018_2_OR_NEWER;UNITY_2018_3;UNITY_2018_3_OR_NEWER;UNITY_2018_4;UNITY_2018_4_OR_NEWER;UNITY_2019_1;UNITY_2019_1_OR_NEWER;UNITY_2019_2;UNITY_2019_2_OR_NEWER;UNITY_2019_3;UNITY_2019_3_OR_NEWER;UNITY_2019_4;UNITY_2019_4_OR_NEWER;UNITY_2020_1;UNITY_2020_1_OR_NEWER;UNITY_2020_2;UNITY_2020_2_OR_NEWER;UNITY_2020_3;UNITY_2020_3_OR_NEWER;UNITY_2021_1;UNITY_2021_1_OR_NEWER;UNITY_2021_2;UNITY_2021_2_OR_NEWER;UNITY_2021_3;UNITY_2021_3_OR_NEWER</DefineConstants>
+        <DebugType>full</DebugType>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -16,16 +17,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="UnityEngine.Modules" Version="2021.3.10" IncludeAssets="compile" />
-        <PackageReference Include="Zeepkist.GameLibs" Version="1.0.0-alpha.15.33.366" />
+        <PackageReference Include="UnityEngine.Modules" Version="2021.3.10" IncludeAssets="compile"/>
+        <PackageReference Include="Zeepkist.GameLibs" Version="1.0.0-alpha.15.50.546" />
     </ItemGroup>
 
     <ItemGroup>
-        <Reference Include="netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
+        <Reference Include="netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Zeepkist.GTR.DTOs\Zeepkist.GTR.DTOs.csproj" />
+        <ProjectReference Include="..\Zeepkist.GTR.DTOs\Zeepkist.GTR.DTOs.csproj"/>
     </ItemGroup>
 
 </Project>

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using TNRD.Zeepkist.GTR.Cysharp.Threading.Tasks;
 using TNRD.Zeepkist.GTR.FluentResults;
+using TNRD.Zeepkist.GTR.SDK.Errors;
 using UnityEngine;
 
 namespace TNRD.Zeepkist.GTR.SDK.Client;
@@ -83,7 +84,7 @@ internal abstract class ClientBase
         CancellationToken ct = default
     )
     {
-        HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri);
+        HttpRequestMessage requestMessage = new(HttpMethod.Get, requestUri);
         LogUrl(requestMessage);
 
         if (addAuth)
@@ -151,6 +152,7 @@ internal abstract class ClientBase
         string requestUri,
         bool addAuth = true,
         bool allowRefresh = true,
+        bool allowFailure = false,
         CancellationToken ct = default
     )
     {
@@ -158,9 +160,12 @@ internal abstract class ClientBase
 
         for (int i = 0; i < MAX_ATTEMPT_COUNT; i++)
         {
-            result = await GetInternal<TResponse>(requestUri, addAuth, allowRefresh, ct);
+            result = await GetInternal<TResponse>(requestUri, addAuth, allowRefresh, allowFailure, ct);
             if (result.IsSuccess)
                 break;
+
+            if (allowFailure)
+                return result;
 
             await UniTask.Delay(TimeSpan.FromSeconds(Math.Pow(i + 1, 2)), cancellationToken: ct);
         }
@@ -172,10 +177,11 @@ internal abstract class ClientBase
         string requestUri,
         bool addAuth = true,
         bool allowRefresh = true,
+        bool allowFailure = false,
         CancellationToken ct = default
     )
     {
-        HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri);
+        HttpRequestMessage requestMessage = new(HttpMethod.Get, requestUri);
         LogUrl(requestMessage);
 
         if (addAuth)
@@ -194,7 +200,7 @@ internal abstract class ClientBase
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            return await GetWithRefresh<TResponse>(requestUri, addAuth, allowRefresh, response, ct);
+            return await GetWithRefresh<TResponse>(requestUri, addAuth, allowRefresh, allowFailure, response, ct);
         }
 
         try
@@ -203,8 +209,23 @@ internal abstract class ClientBase
         }
         catch (Exception e)
         {
-            return Result.Fail(new ExceptionalError(e))
+            Result result = Result.Fail(new ExceptionalError(e))
                 .WithReason(new StatusCodeReason(response.StatusCode));
+
+            if (response.StatusCode == HttpStatusCode.UnprocessableEntity)
+            {
+                try
+                {
+                    string content = await response.Content.ReadAsStringAsync();
+                    result = result.WithReason(new UnprocessableEntityError(content));
+                }
+                catch (Exception)
+                {
+                    // Ignore this
+                }
+            }
+
+            return result;
         }
 
         try
@@ -223,6 +244,7 @@ internal abstract class ClientBase
         string requestUri,
         bool addAuth,
         bool allowRefresh,
+        bool allowFailure,
         HttpResponseMessage response,
         CancellationToken ct
     )
@@ -239,7 +261,7 @@ internal abstract class ClientBase
             if (!refreshAuthResult.IsSuccess)
                 continue;
 
-            Result<TResponse> result = await Get<TResponse>(requestUri, addAuth, false, ct);
+            Result<TResponse> result = await Get<TResponse>(requestUri, addAuth, false, allowFailure, ct);
             if (result.IsSuccess)
                 return result;
         }
@@ -279,7 +301,8 @@ internal abstract class ClientBase
     )
     {
         string requestJson = JsonConvert.SerializeObject(data);
-        HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, requestUri);
+
+        HttpRequestMessage requestMessage = new(HttpMethod.Post, requestUri);
         requestMessage.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
         LogUrl(requestMessage);
 
@@ -308,8 +331,23 @@ internal abstract class ClientBase
         }
         catch (Exception e)
         {
-            return Result.Fail(new ExceptionalError(e))
+            Result result = Result.Fail(new ExceptionalError(e))
                 .WithReason(new StatusCodeReason(response.StatusCode));
+
+            if (response.StatusCode == HttpStatusCode.UnprocessableEntity)
+            {
+                try
+                {
+                    string content = await response.Content.ReadAsStringAsync();
+                    result = result.WithReason(new UnprocessableEntityError(content));
+                }
+                catch (Exception)
+                {
+                    // Ignore this
+                }
+            }
+
+            return result;
         }
 
         return Result.Ok()
@@ -379,7 +417,7 @@ internal abstract class ClientBase
     )
     {
         string requestJson = JsonConvert.SerializeObject(data);
-        HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, requestUri);
+        HttpRequestMessage requestMessage = new(HttpMethod.Post, requestUri);
         requestMessage.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
         LogUrl(requestMessage);
 
@@ -492,7 +530,7 @@ internal abstract class ClientBase
     )
     {
         string requestJson = JsonConvert.SerializeObject(data);
-        HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Put, requestUri);
+        HttpRequestMessage requestMessage = new(HttpMethod.Put, requestUri);
         requestMessage.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
         LogUrl(requestMessage);
 
@@ -587,7 +625,7 @@ internal abstract class ClientBase
         CancellationToken ct = default
     )
     {
-        HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Delete, requestUri);
+        HttpRequestMessage requestMessage = new(HttpMethod.Delete, requestUri);
         LogUrl(requestMessage);
 
         if (addAuth)
@@ -682,9 +720,14 @@ internal abstract class ClientBase
         CancellationToken ct = default
     )
     {
-        string requestJson = JsonConvert.SerializeObject(data);
-        HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Delete, requestUri);
-        requestMessage.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+        HttpRequestMessage requestMessage = new(HttpMethod.Delete, requestUri);
+
+        if (data != null)
+        {
+            string requestJson = JsonConvert.SerializeObject(data);
+            requestMessage.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+        }
+
         LogUrl(requestMessage);
 
         if (addAuth)

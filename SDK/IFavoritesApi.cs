@@ -14,8 +14,7 @@ public interface IFavoritesApi
     );
 
     UniTask<Result<FavoriteResponseModel>> Get(int id);
-    UniTask<Result<GenericIdResponseDTO>> Add(int levelId);
+    UniTask<Result<GenericIdResponseDTO>> Add(string level);
     UniTask<Result<GenericIdResponseDTO>> Add(Action<FavoritesAddRequestDTOBuilder> builder);
     UniTask<Result> Remove(int id);
-    UniTask<Result> Remove(Action<GenericIdRequestDTOBuilder> builder);
 }

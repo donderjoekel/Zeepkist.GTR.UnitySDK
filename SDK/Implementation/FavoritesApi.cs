@@ -34,9 +34,9 @@ public class FavoritesApi : IFavoritesApi
         return sdk.ApiClient.Get<FavoriteResponseModel>($"favorites/{id}");
     }
 
-    public UniTask<Result<GenericIdResponseDTO>> Add(int levelId)
+    public UniTask<Result<GenericIdResponseDTO>> Add(string level)
     {
-        return Add(b => b.WithLevelId(levelId));
+        return Add(b => b.WithLevel(level));
     }
 
     public UniTask<Result<GenericIdResponseDTO>> Add(Action<FavoritesAddRequestDTOBuilder> builder)
@@ -50,15 +50,6 @@ public class FavoritesApi : IFavoritesApi
 
     public UniTask<Result> Remove(int id)
     {
-        return Remove(b => b.WithId(id));
-    }
-
-    public UniTask<Result> Remove(Action<GenericIdRequestDTOBuilder> builder)
-    {
-        GenericIdRequestDTOBuilder actualBuilder = new();
-        builder?.Invoke(actualBuilder);
-        GenericIdRequestDTO dto = actualBuilder.Build();
-
-        return sdk.ApiClient.Delete("favorites", dto);
+        return sdk.ApiClient.Delete($"favorites/{id}");
     }
 }

@@ -12,12 +12,12 @@ namespace TNRD.Zeepkist.GTR.SDK.Implementation;
 public class UpvotesApi : IUpvotesApi
 {
     private readonly Sdk sdk;
-    
+
     public UpvotesApi(Sdk sdk)
     {
         this.sdk = sdk;
     }
-    
+
     public UniTask<Result<UpvotesGetResponseDTO>> Get(Action<UpvotesGetRequestDTOBuilder> builder)
     {
         UpvotesGetRequestDTOBuilder b = new();
@@ -32,9 +32,9 @@ public class UpvotesApi : IUpvotesApi
         return sdk.ApiClient.Get<UpvoteResponseModel>($"upvotes/{id}");
     }
 
-    public UniTask<Result<GenericIdResponseDTO>> Add(int levelId)
+    public UniTask<Result<GenericIdResponseDTO>> Add(string level)
     {
-        return Add(builder => builder.WithLevelId(levelId));
+        return Add(builder => builder.WithLevel(level));
     }
 
     public UniTask<Result<GenericIdResponseDTO>> Add(Action<UpvotesAddRequestDTOBuilder> builder)
@@ -48,15 +48,6 @@ public class UpvotesApi : IUpvotesApi
 
     public UniTask<Result> Remove(int id)
     {
-        return Remove(b => b.WithId(id));
-    }
-
-    public UniTask<Result> Remove(Action<GenericIdRequestDTOBuilder> builder)
-    {
-        GenericIdRequestDTOBuilder b = new();
-        builder?.Invoke(b);
-        GenericIdRequestDTO dto = b.Build();
-
-        return sdk.ApiClient.Delete("upvotes", dto);
+        return sdk.ApiClient.Delete($"upvotes/{id}");
     }
 }

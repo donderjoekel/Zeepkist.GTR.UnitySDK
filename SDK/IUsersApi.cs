@@ -27,18 +27,11 @@ public interface IUsersApi
     string ModVersion { get; }
 
     UniTask<Result<UsersGetAllResponseDTO>> Get(Action<GenericGetRequestDTOBuilder> builder);
-    UniTask<Result<UserResponseModel>> GetById(Action<GenericIdRequestDTOBuilder> builder);
-
-    UniTask<Result<UserResponseModel>> GetBySteamId(
-        Action<UsersGetBySteamIdRequestDTOBuilder> builder
-    );
-
-    UniTask<Result<UsersRankingResponseDTO>> Ranking(
-        Action<GenericGetRequestDTOBuilder> builder
-    );
-
+    UniTask<Result<UserResponseModel>> GetById(int id);
+    UniTask<Result<UsersGetByIdsResponseDTO>> GetByIds(Action<UsersGetByIdsRequestDTOBuilder> builder);
+    UniTask<Result<UserResponseModel>> GetBySteamId(Action<UsersGetBySteamIdRequestDTOBuilder> builder);
+    UniTask<Result<UsersRankingResponseDTO>> Ranking(Action<GenericGetRequestDTOBuilder> builder);
     UniTask<Result<UsersRankingsResponseDTO>> Rankings(Action<GenericGetRequestDTOBuilder> builder);
-    
     UniTask<Result> UpdateStats(UsersUpdateStatsRequestDTO stats);
 
     /// <summary>

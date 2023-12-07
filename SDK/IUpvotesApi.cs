@@ -11,8 +11,7 @@ public interface IUpvotesApi
 {
     UniTask<Result<UpvotesGetResponseDTO>> Get(Action<UpvotesGetRequestDTOBuilder> builder);
     UniTask<Result<UpvoteResponseModel>> Get(int id);
-    UniTask<Result<GenericIdResponseDTO>> Add(int levelId);
+    UniTask<Result<GenericIdResponseDTO>> Add(string level);
     UniTask<Result<GenericIdResponseDTO>> Add(Action<UpvotesAddRequestDTOBuilder> builder);
     UniTask<Result> Remove(int id);
-    UniTask<Result> Remove(Action<GenericIdRequestDTOBuilder> builder);
 }
