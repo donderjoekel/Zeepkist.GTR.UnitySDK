@@ -407,6 +407,25 @@ internal abstract class ClientBase
         return result;
     }
 
+    private async Task<Result> AddResponseAsError(Result result, HttpResponseMessage response)
+    {
+        if (response == null)
+            return result;
+
+        string errorContent = null;
+
+        try
+        {
+            errorContent = await response.Content.ReadAsStringAsync();
+        }
+        catch
+        {
+            // ignored
+        }
+
+        return string.IsNullOrEmpty(errorContent) ? result : result.WithError(errorContent);
+    }
+
     private async UniTask<Result<TResponse>> PostInternal<TResponse>(
         string requestUri,
         object data,
@@ -416,8 +435,8 @@ internal abstract class ClientBase
         CancellationToken ct = default
     )
     {
-        string requestJson = JsonConvert.SerializeObject(data);
         HttpRequestMessage requestMessage = new(HttpMethod.Post, requestUri);
+        string requestJson = data as string ?? JsonConvert.SerializeObject(data);
         requestMessage.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
         LogUrl(requestMessage);
 
@@ -432,7 +451,8 @@ internal abstract class ClientBase
         }
         catch (Exception e)
         {
-            return Result.Fail(new ExceptionalError(e));
+            Result result = Result.Fail(new ExceptionalError(e));
+            return await AddResponseAsError(result, response);
         }
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
@@ -452,8 +472,9 @@ internal abstract class ClientBase
         }
         catch (Exception e)
         {
-            return Result.Fail(new ExceptionalError(e))
+            Result result = Result.Fail(new ExceptionalError(e))
                 .WithReason(new StatusCodeReason(response.StatusCode));
+            return await AddResponseAsError(result, response);
         }
 
         try
@@ -464,7 +485,8 @@ internal abstract class ClientBase
         }
         catch (Exception e)
         {
-            return Result.Fail(new ExceptionalError(e));
+            Result result = Result.Fail(new ExceptionalError(e));
+            return await AddResponseAsError(result, response);
         }
     }
 
